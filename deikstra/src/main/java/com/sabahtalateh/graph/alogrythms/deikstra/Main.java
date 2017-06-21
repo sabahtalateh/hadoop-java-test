@@ -1,31 +1,15 @@
 package com.sabahtalateh.graph.alogrythms.deikstra;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
+import java.io.*;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) throws Exception {
 
-        String in = "5 10\n" +
-                "1 2 10\n" +
-                "1 3 5\n" +
-                "2 3 2\n" +
-                "2 4 1\n" +
-                "3 2 3\n" +
-                "3 4 9\n" +
-                "3 5 2\n" +
-                "4 5 4\n" +
-                "5 1 7\n" +
-                "5 4 6\n" +
-                "1 4";
-
         AdjList adjList = new AdjList();
-//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        BufferedReader reader = new BufferedReader(new StringReader(in));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         List<String> lst = new ArrayList<>();
 
@@ -51,14 +35,11 @@ public class Main {
             lst.clear();
         }
 
-        System.out.println(adjList);
-
         line = reader.readLine();
         Collections.addAll(lst, line.split(" "));
         int start = Integer.valueOf(lst.get(0));
         int finish = Integer.valueOf(lst.get(1));
         long path = new Algorithm().run(adjList, start, finish);
-
         System.out.println(path);
     }
 
@@ -84,7 +65,6 @@ public class Main {
         }
 
         ArrayList<WeightedVertex> getSiblings(int v) {
-            System.out.println(this.adjList);
             return this.adjList.get(v);
         }
 
@@ -106,41 +86,73 @@ public class Main {
             optimal.put(start, 0L);
             rest.remove(start);
 
-            List<WeightedEdge> waysToGo = new ArrayList<>();
-            for (Map.Entry<Integer, Long> vertex : optimal.entrySet()) {
-                System.out.println(vertex.getKey());
-                System.out.println(adjList.getSiblings(vertex.getKey()));
-//                List<WeightedVertex> child = adjList.getSiblings(vertex.getKey());
-//                System.out.println(child);
+//            System.out.println(optimal);
+//            System.out.println(rest);
 
+//            for (int i = 0; i < 4; i ++) {
+            while (!rest.isEmpty()) {
+                List<WeightedEdge> waysToGo = new ArrayList<>();
+                for (Map.Entry<Integer, Long> vertex : optimal.entrySet()) {
+                    List<WeightedVertex> children = adjList.getSiblings(vertex.getKey());
+                    for (WeightedVertex child : children) {
+                        waysToGo.add(new WeightedEdge(vertex.getKey(), child.getVertex(), child.getWeight()));
+                    }
+                }
 
+                waysToGo = waysToGo.stream().filter(new Predicate<WeightedEdge>() {
+                    @Override
+                    public boolean test(WeightedEdge weightedEdge) {
+                        if (optimal.containsKey(weightedEdge.getV2())) {
+                            return false;
+                        }
+                        return true;
+                    }
+                }).collect(Collectors.toList());
 
-//                for (WeightedVertex sibling : weightedVertices) {
-//                    waysToGo.add(new WeightedEdge(vertex, sibling.getVertex(), sibling.getWeight()));
-//                }
+                if (waysToGo.isEmpty()) {
+                    return -1;
+                }
+
+                Optional<WeightedEdge> min = waysToGo.stream().min(new Comparator<WeightedEdge>() {
+                    @Override
+                    public int compare(WeightedEdge o1, WeightedEdge o2) {
+                        return Long.compare(o1.getWeight(), o2.getWeight());
+                    }
+                });
+
+                if (min.isPresent()) {
+                    long weight = optimal.get(min.get().getV1()) + min.get().getWeight();
+                    optimal.put(min.get().getV2(), weight);
+                    rest.remove(min.get().getV2());
+                    if (min.get().getV2() == end) {
+                        return weight;
+                    }
+                } else {
+                    return -1;
+                }
+
+//                System.out.println(optimal);
+//                System.out.println(rest);
             }
-
-//            System.out.println(waysToGo);
-
 
             return path;
         }
     }
 
     private static class WeightedVertex {
-        private long vertex;
+        private int vertex;
         private long weight;
 
-        WeightedVertex(long vertex, long weight) {
+        WeightedVertex(int vertex, long weight) {
             this.vertex = vertex;
             this.weight = weight;
         }
 
-        public long getVertex() {
+        int getVertex() {
             return vertex;
         }
 
-        public long getWeight() {
+        long getWeight() {
             return weight;
         }
 
@@ -154,25 +166,25 @@ public class Main {
     }
 
     private static class WeightedEdge {
-        private long v1;
-        private long v2;
+        private int v1;
+        private int v2;
         private long weight;
 
-        WeightedEdge(long v1, long v2, long weight) {
+        WeightedEdge(int v1, int v2, long weight) {
             this.v1 = v1;
             this.v2 = v2;
             this.weight = weight;
         }
 
-        public long getV1() {
+        int getV1() {
             return v1;
         }
 
-        public long getV2() {
+        int getV2() {
             return v2;
         }
 
-        public long getWeight() {
+        long getWeight() {
             return weight;
         }
 
