@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class DeikstraTest {
+public class MainTest {
     @Test
     public void mainTest() {
         assertTrue(true);
