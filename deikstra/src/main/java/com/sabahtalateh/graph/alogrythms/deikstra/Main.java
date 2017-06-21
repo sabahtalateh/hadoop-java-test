@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String[] lines = new String[30];
 
         String in = "5 10\n" +
                 "1 2 10\n" +
@@ -28,11 +27,10 @@ public class Main {
 //        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         BufferedReader reader = new BufferedReader(new StringReader(in));
 
-        ArrayList<String> lst = new ArrayList<String>();
+        List<String> lst = new ArrayList<>();
 
-        String line1 = reader.readLine();
-        lines[0] = line1;
-        Collections.addAll(lst, line1.split(" "));
+        String line = reader.readLine();
+        Collections.addAll(lst, line.split(" "));
 
         int numV = Integer.valueOf(lst.get(0));
         int numE = Integer.valueOf(lst.get(1));
@@ -42,10 +40,10 @@ public class Main {
             adjList.addVertex(i + 1);
         }
 
+
         for (int i = 0; i < numE; i++) {
-            String line = reader.readLine();
+            line = reader.readLine();
             Collections.addAll(lst, line.split(" "));
-            lines[i+1] = line;
             int v1 = Integer.valueOf(lst.get(0));
             int v2 = Integer.valueOf(lst.get(1));
             int w = Integer.valueOf(lst.get(2));
@@ -53,57 +51,41 @@ public class Main {
             lst.clear();
         }
 
-//        System.out.println(Arrays.toString(lines));
+        System.out.println(adjList);
 
-        line1 = reader.readLine();
-        Collections.addAll(lst, line1.split(" "));
-        lines[28] = line1;
+        line = reader.readLine();
+        Collections.addAll(lst, line.split(" "));
         int start = Integer.valueOf(lst.get(0));
         int finish = Integer.valueOf(lst.get(1));
+        long path = new Algorithm().run(adjList, start, finish);
 
-        long ans = new Algorithm().run(adjList, start, finish);
-        lines[29] = String.valueOf(ans);
-        System.out.println(ans);
-
-        Random random = new Random();
-        random.nextInt(1);
-        int ran = random.nextInt(5);
-//        System.out.println(in);
-        if (ran == 4) {
-//            throw new Exception(Arrays.toString(lines));
-        }
+        System.out.println(path);
     }
 
 
     private static class AdjList {
 
-        private Map<Integer, ArrayList<Map<Integer, Integer>>> adjList;
+        private Map<Integer, ArrayList<WeightedVertex>> adjList;
 
         AdjList() {
-            this.adjList = new HashMap<Integer, ArrayList<Map<Integer, Integer>>>();
+            this.adjList = new HashMap<>();
         }
 
         void addVertex(int v) {
-            adjList.put(v, new ArrayList<Map<Integer, Integer>>());
+            this.adjList.put(v, new ArrayList<>());
         }
 
         void addEdge(int v1, int v2, int w) {
-            HashMap<Integer, Integer> m = new HashMap<Integer, Integer>();
-            m.put(v2, w);
-            adjList.get(v1).add(m);
+            adjList.get(v1).add(new WeightedVertex(v2, w));
         }
 
-        ArrayList<Integer> getAllVertexes() {
-            ArrayList<Integer> vs = new ArrayList<Integer>();
-            adjList.keySet();
-            for (Map.Entry<Integer, ArrayList<Map<Integer, Integer>>> e : this.adjList.entrySet()) {
-                vs.add(e.getKey());
-            }
-            return vs;
+        Set<Integer> getAllVertexes() {
+            return new HashSet<>(adjList.keySet());
         }
 
-        ArrayList<Map<Integer, Integer>> getAdjListForVertex(int v) {
-            return adjList.get(v);
+        ArrayList<WeightedVertex> getSiblings(int v) {
+            System.out.println(this.adjList);
+            return this.adjList.get(v);
         }
 
         @Override
@@ -116,46 +98,91 @@ public class Main {
 
     private static class Algorithm {
         long run(AdjList adjList, int start, int end) {
-
-            ArrayList<Integer> optimal = new ArrayList<Integer>();
-            ArrayList<Integer> rest = adjList.getAllVertexes();
-
             long path = 0;
-            optimal.add(start);
-            rest.remove(rest.indexOf(start));
 
-//        for (int i = 0; i < 3; i++) {
-            while (!rest.isEmpty()) {
-                Optional<Map<Integer, Integer>> min = Optional.empty();
-                List<Map<Integer, Integer>> nexToGo = new ArrayList<Map<Integer, Integer>>();
-                for (int v : optimal) {
-                    nexToGo.addAll(adjList.getAdjListForVertex(v));
-                }
+            HashMap<Integer, Long> optimal = new HashMap<>();
+            Set<Integer> rest = adjList.getAllVertexes();
 
-                nexToGo = nexToGo.stream().filter(integerIntegerMap -> {
-                    int v1 = (Integer) integerIntegerMap.keySet().toArray()[0];
-                    return rest.indexOf(v1) != -1;
-                }).collect(Collectors.toList());
+            optimal.put(start, 0L);
+            rest.remove(start);
 
-                if (nexToGo.isEmpty()) {
-                    return -1;
-                }
+            List<WeightedEdge> waysToGo = new ArrayList<>();
+            for (Map.Entry<Integer, Long> vertex : optimal.entrySet()) {
+                System.out.println(vertex.getKey());
+                System.out.println(adjList.getSiblings(vertex.getKey()));
+//                List<WeightedVertex> child = adjList.getSiblings(vertex.getKey());
+//                System.out.println(child);
 
-                min = nexToGo.stream().min(Comparator.comparingInt(o -> (Integer) o.values().toArray()[0]));
 
-                if (min.isPresent()) {
-                    path += (Integer) min.get().values().toArray()[0];
-                    int minV = (Integer) min.get().keySet().toArray()[0];
-                    optimal.add(minV);
-                    rest.remove(rest.indexOf(minV));
-                }
 
-                if (rest.indexOf(end) == -1) {
-                    break;
-                }
+//                for (WeightedVertex sibling : weightedVertices) {
+//                    waysToGo.add(new WeightedEdge(vertex, sibling.getVertex(), sibling.getWeight()));
+//                }
             }
 
+//            System.out.println(waysToGo);
+
+
             return path;
+        }
+    }
+
+    private static class WeightedVertex {
+        private long vertex;
+        private long weight;
+
+        WeightedVertex(long vertex, long weight) {
+            this.vertex = vertex;
+            this.weight = weight;
+        }
+
+        public long getVertex() {
+            return vertex;
+        }
+
+        public long getWeight() {
+            return weight;
+        }
+
+        @Override
+        public String toString() {
+            return "W-V{" +
+                    "v=" + vertex +
+                    ", w=" + weight +
+                    '}';
+        }
+    }
+
+    private static class WeightedEdge {
+        private long v1;
+        private long v2;
+        private long weight;
+
+        WeightedEdge(long v1, long v2, long weight) {
+            this.v1 = v1;
+            this.v2 = v2;
+            this.weight = weight;
+        }
+
+        public long getV1() {
+            return v1;
+        }
+
+        public long getV2() {
+            return v2;
+        }
+
+        public long getWeight() {
+            return weight;
+        }
+
+        @Override
+        public String toString() {
+            return "W-E{" +
+                    "v1=" + v1 +
+                    ", v2=" + v2 +
+                    ", w=" + weight +
+                    '}';
         }
     }
 }
